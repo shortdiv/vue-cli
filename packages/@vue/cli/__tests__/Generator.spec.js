@@ -10,6 +10,7 @@ const stringifyJS = require('../lib/util/stringifyJS')
 const templateDir = path.resolve(__dirname, 'template')
 fs.ensureDirSync(templateDir)
 fs.writeFileSync(path.resolve(templateDir, 'foo.js'), 'foo(<%- options.n %>)')
+fs.ensureDirSync(path.resolve(templateDir, 'modules'))
 fs.ensureDirSync(path.resolve(templateDir, 'bar'))
 fs.writeFileSync(path.resolve(templateDir, 'bar/bar.js'), 'bar(<%- m %>)')
 fs.writeFileSync(path.resolve(templateDir, 'entry.js'), `
@@ -339,6 +340,28 @@ test('api: render fs directory', async () => {
 
   expect(fs.readFileSync('/foo.js', 'utf-8')).toMatch('foo(1)')
   expect(fs.readFileSync('/bar/bar.js', 'utf-8')).toMatch('bar(2)')
+  expect(fs.readFileSync('/replace.js', 'utf-8')).toMatch('baz(2)')
+  expect(fs.readFileSync('/multi-replace.js', 'utf-8')).toMatch('baz(1)\nqux(2)')
+})
+
+test('api: render empty fs directory', async () => {
+  const generator = new Generator('/', { plugins: [
+    {
+      id: 'test2',
+      apply: api => {
+        api.render('./template', { m: 2 })
+      },
+      options: {
+        n: 1
+      }
+    }
+  ] })
+
+  await generator.generate()
+
+  expect(fs.readFileSync('/foo.js', 'utf-8')).toMatch('foo(1)')
+  expect(fs.readFileSync('/bar/bar.js', 'utf-8')).toMatch('bar(2)')
+  expect(fs.existsSync('/modules')).toBe(true)
   expect(fs.readFileSync('/replace.js', 'utf-8')).toMatch('baz(2)')
   expect(fs.readFileSync('/multi-replace.js', 'utf-8')).toMatch('baz(1)\nqux(2)')
 })

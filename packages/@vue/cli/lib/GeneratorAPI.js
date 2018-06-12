@@ -134,6 +134,17 @@ class GeneratorAPI {
       this._injectFileMiddleware(async (files) => {
         const data = this._resolveData(additionalData)
         const _files = await globby(['**/*'], { cwd: source })
+        fs.readdir(source, '', (err, files) => {
+          if (err) { console.log(err) }
+          files.forEach(async (file) => {
+            fs.stat(path.resolve(baseDir, './template', file), (er, stat) => {
+              if (er) throw er
+              if (stat.isDirectory()) {
+                console.log(file)
+              }
+            })
+          })
+        })
         for (const rawPath of _files) {
           let filename = path.basename(rawPath)
           // dotfiles are ignored when published to npm, therefore in templates
